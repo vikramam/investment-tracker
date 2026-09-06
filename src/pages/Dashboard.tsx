@@ -19,7 +19,14 @@ export function Dashboard() {
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeSlide, setActiveSlide] = useState(0);
 
-  const upcoming = useMemo(() => allPendingPayouts(members).slice(0, 4), [members]);
+  const readyToCollect = useMemo(() => {
+    const map = new Map<string, { memberId: string; name: string; total: number }>();
+    allPendingPayouts(members).forEach((p) => {
+      if (!map.has(p.memberId)) map.set(p.memberId, { memberId: p.memberId, name: p.memberName, total: 0 });
+      map.get(p.memberId)!.total += p.amount;
+    });
+    return [...map.values()];
+  }, [members]);
 
   const slides = useMemo(() => {
     const allDeposits = members.flatMap((m) => m.deposits);
@@ -105,16 +112,16 @@ export function Dashboard() {
       </Box>
 
       <Typography fontSize={13} fontWeight={600} mb={1.25}>
-        Upcoming payouts
+        Ready To Collect
       </Typography>
-      {upcoming.length === 0 ? (
+      {readyToCollect.length === 0 ? (
         <EmptyState title="No payouts due" subtitle="Add a deposit to start the monthly cycle" />
       ) : (
-        upcoming.map((p) => (
+        readyToCollect.map((g) => (
           <Button
-            key={p.id}
+            key={g.memberId}
             fullWidth
-            onClick={() => navigate(`/family/${p.memberId}`)}
+            onClick={() => navigate('/collections')}
             sx={{
               justifyContent: 'space-between',
               textAlign: 'left',
@@ -128,16 +135,11 @@ export function Dashboard() {
               color: 'text.primary'
             }}
           >
-            <Box>
-              <Typography fontSize={13} fontWeight={600}>
-                {p.memberName}
-              </Typography>
-              <Typography fontSize={11.5} color="text.secondary" mt={0.25}>
-                Due {fmtDate(p.due_date)}
-              </Typography>
-            </Box>
+            <Typography fontSize={13} fontWeight={600}>
+              {g.name}
+            </Typography>
             <Typography sx={monoSx} fontSize={14} fontWeight={600}>
-              {fmtMoney(p.amount)}
+              {fmtMoney(g.total)}
             </Typography>
           </Button>
         ))

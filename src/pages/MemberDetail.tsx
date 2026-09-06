@@ -10,8 +10,8 @@ import {
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFamilyData } from '@/data/useFamilyData';
-import { breakEvenStats, outstanding } from '@/lib/ledger';
-import { fmtMoney, rupeesToPaise } from '@/lib/money';
+import { breakEvenStats, outstanding, previewNextPayout } from '@/lib/ledger';
+import { fmtMoney, formatAmountInput, rupeesToPaise, sanitizeAmountInput } from '@/lib/money';
 import { fmtDate, todayISO } from '@/lib/dates';
 import { AMBER_GRADIENT, GREEN, monoSx } from '@/theme';
 import { Icon } from '@/icons/Icon';
@@ -35,10 +35,13 @@ export function MemberDetail() {
   const [saving, setSaving] = useState(false);
 
   const [withdrawDeposit, setWithdrawDeposit] = useState<DepositWithHistory | null>(null);
-  const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawCollector, setWithdrawCollector] = useState<string | null>(null);
 
   const stats = useMemo(() => (member ? breakEvenStats(member.deposits) : null), [member]);
+  const sortedDeposits = useMemo(
+    () => (member ? [...member.deposits].sort((a, b) => b.deposit_date.localeCompare(a.deposit_date)) : []),
+    [member]
+  );
 
   if (!member || !stats) {
     return <EmptyState title="Member not found" subtitle="They may have been removed" />;
@@ -60,12 +63,13 @@ export function MemberDetail() {
 
   async function submitWithdraw() {
     if (!withdrawDeposit || !withdrawCollector) return;
-    const paise = Math.min(rupeesToPaise(withdrawAmount), outstanding(withdrawDeposit));
+    // Only full withdrawal is allowed — always the deposit's entire
+    // outstanding principal, which closes it. No partial amount.
+    const paise = outstanding(withdrawDeposit);
     if (paise <= 0) return;
     setSaving(true);
     try {
       await withdrawPrincipal(withdrawDeposit.id, paise, withdrawCollector);
-      setWithdrawAmount('');
       setWithdrawCollector(null);
       setWithdrawDeposit(null);
     } finally {
@@ -115,24 +119,24 @@ export function MemberDetail() {
       </Box>
 
       {tab === 'deposits' &&
-        (member.deposits.length === 0 ? (
+        (sortedDeposits.length === 0 ? (
           <EmptyState title="No deposits yet" subtitle="Add their first deposit above" />
         ) : (
-          member.deposits.map((d) => (
+          sortedDeposits.map((d) => (
             <DepositCard key={d.id} deposit={d} onWithdraw={() => setWithdrawDeposit(d)} />
           ))
         ))}
 
-      {tab === 'interest' && <InterestTab member={member} />}
+      {tab === 'interest' && <InterestTab member={member} allMembers={members} />}
       {tab === 'withdrawals' && <WithdrawalsTab member={member} allMembers={members} />}
 
       <BottomSheet open={addSheetOpen} onClose={() => setAddSheetOpen(false)} title="Add deposit">
         <TextField
           fullWidth
           label="Amount (Rs.)"
-          type="number"
-          value={depositAmount}
-          onChange={(e) => setDepositAmount(e.target.value)}
+          inputMode="decimal"
+          value={formatAmountInput(depositAmount)}
+          onChange={(e) => setDepositAmount(sanitizeAmountInput(e.target.value))}
           sx={{ mb: 1.5 }}
         />
         <TextField
@@ -156,17 +160,12 @@ export function MemberDetail() {
       >
         {withdrawDeposit && (
           <>
-            <Typography fontSize={11.5} color="text.secondary" mb={1.25}>
-              Outstanding principal: {fmtMoney(outstanding(withdrawDeposit))}
+            <Typography fontSize={12.5} color="text.secondary" mb={0.5}>
+              Only full withdrawal is allowed — this closes the deposit.
             </Typography>
-            <TextField
-              fullWidth
-              label="Withdraw amount (Rs.)"
-              type="number"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              sx={{ mb: 1.5 }}
-            />
+            <Typography sx={monoSx} fontSize={20} fontWeight={700} mb={1.75}>
+              {fmtMoney(outstanding(withdrawDeposit))}
+            </Typography>
             <CollectorPicker
               members={members}
               value={withdrawCollector}
@@ -215,6 +214,7 @@ function DepositCard({ deposit, onWithdraw }: { deposit: DepositWithHistory; onW
   const out = outstanding(deposit);
   const isActive = out > 0;
   const nextDue = deposit.payouts.find((p) => p.status === 'pending');
+  const preview = !nextDue && isActive ? previewNextPayout(deposit) : null;
 
   return (
     <Paper sx={{ p: 2, borderRadius: 1, mb: 1.25 }}>
@@ -239,7 +239,7 @@ function DepositCard({ deposit, onWithdraw }: { deposit: DepositWithHistory; onW
         />
       </Box>
 
-      {nextDue && (
+      {(nextDue || preview) && (
         <Box
           sx={{
             display: 'flex',
@@ -253,7 +253,16 @@ function DepositCard({ deposit, onWithdraw }: { deposit: DepositWithHistory; onW
         >
           <Icon name="calendar" sx={{ fontSize: 13, color: 'text.secondary' }} />
           <Typography fontSize={11.5} color="text.secondary">
-            Next due {fmtDate(nextDue.due_date)} &middot; {fmtMoney(nextDue.amount)}
+            {nextDue ? (
+              <>
+                Next due {fmtDate(nextDue.due_date)} &middot; {fmtMoney(nextDue.amount)}
+              </>
+            ) : (
+              <>
+                Next payout {fmtDate(preview!.due_date)} &middot; {fmtMoney(preview!.amount)} &middot; not
+                due yet
+              </>
+            )}
           </Typography>
         </Box>
       )}
@@ -272,13 +281,21 @@ function DepositCard({ deposit, onWithdraw }: { deposit: DepositWithHistory; onW
   );
 }
 
-function InterestTab({ member }: { member: MemberWithDeposits }) {
+function InterestTab({ member, allMembers }: { member: MemberWithDeposits; allMembers: MemberWithDeposits[] }) {
   const rows = member.deposits
     .flatMap((d) => d.payouts.filter((p) => p.status === 'collected').map((p) => ({ dep: d, ...p })))
     .sort((a, b) => (b.collected_date ?? '').localeCompare(a.collected_date ?? ''));
 
   if (rows.length === 0) {
     return <EmptyState title="No interest collected yet" subtitle="Collected payouts will show up here" />;
+  }
+
+  // System-generated collections (the "Mark Interest Collected Till Date"
+  // bulk backfill) leave collected_by null — there's no individual
+  // collector to attribute, so show a plain "-" rather than a name.
+  function collectorName(id: string | null) {
+    if (!id) return '-';
+    return allMembers.find((m) => m.id === id)?.name ?? '-';
   }
 
   return (
@@ -293,7 +310,7 @@ function InterestTab({ member }: { member: MemberWithDeposits }) {
               Collected {fmtDate(p.collected_date!)}
             </Typography>
             <Typography fontSize={11.5} color="text.secondary" mt={0.25}>
-              Due {fmtDate(p.due_date)}
+              Due {fmtDate(p.due_date)} &middot; collected by {collectorName(p.collected_by)}
             </Typography>
           </Box>
           <Typography sx={monoSx} fontSize={13.5} fontWeight={600}>

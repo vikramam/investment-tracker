@@ -1,12 +1,12 @@
-import { Box, IconButton, BottomNavigation, BottomNavigationAction, useTheme } from '@mui/material';
+import { Box, IconButton, BottomNavigation, BottomNavigationAction, Typography, useTheme } from '@mui/material';
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { Icon } from '@/icons/Icon';
 import { useThemeMode } from '@/lib/themeMode';
 
 const TABS = [
   { path: '/', label: 'Home', icon: 'home' as const },
-  { path: '/family', label: 'Family', icon: 'family' as const },
   { path: '/collections', label: 'Collect', icon: 'collect' as const },
+  { path: '/family', label: 'Family', icon: 'family' as const },
   { path: '/analytics', label: 'Analytics', icon: 'analytics' as const }
 ];
 
@@ -26,7 +26,7 @@ export function Layout() {
           justifyContent: 'space-between',
           alignItems: 'center',
           px: 2.5,
-          pt: 2,
+          pt: 'calc(16px + env(safe-area-inset-top))',
           pb: 0.5,
           position: 'sticky',
           top: 0,
@@ -35,17 +35,22 @@ export function Layout() {
           bgcolor: mode === 'dark' ? 'rgba(9,9,11,0.7)' : 'rgba(250,250,250,0.7)'
         }}
       >
-        <IconButton
-          onClick={() => navigate('/settings')}
-          size="small"
-          sx={{
-            border: `1px solid ${theme.palette.divider}`,
-            borderRadius: '10px',
-            bgcolor: 'background.paper'
-          }}
-        >
-          <Icon name="menu" fontSize="small" />
-        </IconButton>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+          <IconButton
+            onClick={() => navigate('/settings')}
+            size="small"
+            sx={{
+              border: `1px solid ${theme.palette.divider}`,
+              borderRadius: '10px',
+              bgcolor: 'background.paper'
+            }}
+          >
+            <Icon name="menu" fontSize="small" />
+          </IconButton>
+          <Typography variant="h6" fontSize={16} fontWeight={700}>
+            Investment Tracker
+          </Typography>
+        </Box>
         <IconButton
           onClick={toggle}
           size="small"

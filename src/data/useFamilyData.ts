@@ -42,9 +42,24 @@ export function useFamilyData() {
       if (payoutsRes.error) throw payoutsRes.error;
 
       const members = membersRes.data as FamilyMember[];
-      const deposits = depositsRes.data as Deposit[];
-      const withdrawals = withdrawalsRes.data as Withdrawal[];
-      const payouts = payoutsRes.data as InterestPayout[];
+      // principal_amount/amount are `bigint` columns in Postgres, which
+      // PostgREST serializes as JSON STRINGS (not numbers) — JS numbers
+      // can't safely represent the full bigint range. Coerce to Number
+      // right here at the fetch boundary so every downstream sum (`+`,
+      // reduce) sees real numbers; otherwise `0 + "2000"` silently string-
+      // concatenates instead of adding once more than one value is summed.
+      const deposits = (depositsRes.data as Deposit[]).map((d) => ({
+        ...d,
+        principal_amount: Number(d.principal_amount)
+      }));
+      const withdrawals = (withdrawalsRes.data as Withdrawal[]).map((w) => ({
+        ...w,
+        amount: Number(w.amount)
+      }));
+      const payouts = (payoutsRes.data as InterestPayout[]).map((p) => ({
+        ...p,
+        amount: Number(p.amount)
+      }));
 
       const assembled: MemberWithDeposits[] = members.map((m) => ({
         ...m,
@@ -69,9 +84,13 @@ export function useFamilyData() {
           .from('interest_payouts')
           .select('*');
         if (refetchError) throw refetchError;
+        const freshPayoutsCoerced = (freshPayouts as InterestPayout[]).map((p) => ({
+          ...p,
+          amount: Number(p.amount)
+        }));
         assembled.forEach((m) =>
           m.deposits.forEach((d) => {
-            d.payouts = (freshPayouts as InterestPayout[]).filter((p) => p.deposit_id === d.id);
+            d.payouts = freshPayoutsCoerced.filter((p) => p.deposit_id === d.id);
           })
         );
       }
@@ -123,12 +142,15 @@ export function useFamilyData() {
     [load]
   );
 
-  const collectPayout = useCallback(
-    async (payoutId: string, collectedBy: string) => {
+  /** Marks one or more payouts collected in a single update — used for both
+   * a single row's "Collect" button and a member's "Collect all". */
+  const collectPayouts = useCallback(
+    async (payoutIds: string[], collectedBy: string) => {
+      if (payoutIds.length === 0) return;
       const { error } = await supabase
         .from('interest_payouts')
         .update({ status: 'collected', collected_date: todayISO(), collected_by: collectedBy })
-        .eq('id', payoutId);
+        .in('id', payoutIds);
       if (error) throw error;
       await load(); // next cycle's payout gets generated on this reload
     },
@@ -149,5 +171,5 @@ export function useFamilyData() {
     [load]
   );
 
-  return { ...state, refresh: load, addMember, addDeposit, collectPayout, withdrawPrincipal };
+  return { ...state, refresh: load, addMember, addDeposit, collectPayouts, withdrawPrincipal };
 }

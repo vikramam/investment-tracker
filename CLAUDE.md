@@ -40,12 +40,14 @@ Each **deposit** is an independent, self-contained "note":
   `due_date`, while the internal loop keeps stepping the anniversary chain
   itself — offsetting before stepping would compound the shift forward by
   a day every cycle).
-- Keeps paying every month until fully withdrawn — a `status` flips from
+- Keeps paying every month until withdrawn — a `status` flips from
   `active` to `closed` once its outstanding principal hits zero.
-- **Partial withdrawals are allowed.** A deposit can have many withdrawal
-  rows against it; each one reduces the outstanding principal, which
-  reduces the *next* interest cycle's amount — but never rewrites a payout
-  that was already generated for an earlier cycle (see snapshotting below).
+- **Only full withdrawal is allowed (reversed from v1's original design —
+  see below).** Withdrawing a deposit's principal always withdraws the
+  entire outstanding amount and closes it in the same action; there is no
+  partial-withdrawal amount field in the UI. `submitWithdraw` in
+  `src/pages/MemberDetail.tsx` always passes `outstanding(deposit)` as the
+  amount, never a user-typed value.
 
 A family member can have **multiple concurrent deposits**, each running its
 own independent monthly cycle. E.g. someone deposits 1,00,000 in August and
@@ -108,10 +110,14 @@ collectibility offset are independent, applied in that order.
   same reasoning as MIG Stock's per-type `default_discount`), `deposit_date`,
   `status` (`active`/`closed`, flipped automatically once outstanding
   principal hits zero — see `useFamilyData`'s auto-close logic).
-- **`withdrawals`** — one or more rows per deposit (supports partial
-  withdrawal). `collected_by` is **any** family member, not locked to the
-  depositor — the family explicitly wanted "one person collects for
-  everyone" support.
+- **`withdrawals`** — the schema still allows multiple rows per deposit
+  (no DB-level constraint limiting it to one), but the app now only ever
+  inserts a single row per deposit, equal to its full outstanding
+  principal — partial withdrawal was explicitly disallowed after v1 (the
+  owner tried a partial withdrawal and asked for it to be blocked; only
+  full-withdrawal-and-close is offered now). `collected_by` is **any**
+  family member, not locked to the depositor — the family explicitly
+  wanted "one person collects for everyone" support.
 - **`interest_payouts`** — one row per monthly cycle. `amount` is
   snapshotted (see above). `status` is `pending`/`collected`.
   `unique (deposit_id, due_date)` prevents ever double-generating the same

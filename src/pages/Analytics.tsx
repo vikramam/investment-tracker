@@ -107,6 +107,14 @@ function AnalyticsCard({ name, stats, isAll }: { name: string; stats: BreakEvenS
             {fmtMoney(stats.withdrawn)}
           </Typography>
         </Box>
+        <Box>
+          <Typography fontSize={11} color="text.secondary">
+            Interest collected
+          </Typography>
+          <Typography sx={monoSx} fontSize={16} fontWeight={600} mt={0.25} color={GREEN}>
+            {fmtMoney(stats.interestPaid)}
+          </Typography>
+        </Box>
       </Box>
 
       <Box sx={{ height: 6, borderRadius: 0.75, bgcolor: 'divider', overflow: 'hidden', mt: 1.75, mb: 0.5 }}>
