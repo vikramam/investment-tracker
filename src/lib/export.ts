@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import { supabase } from './supabase';
+import { todayISO } from './dates';
 
 /**
  * Exports every raw ledger table as-is (not the assembled/nested app
@@ -46,6 +47,6 @@ export async function exportAllDataToExcel(): Promise<void> {
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(payouts), 'Interest Payouts');
 
-  const filename = `family-deposit-backup-${new Date().toISOString().slice(0, 10)}.xlsx`;
+  const filename = `family-deposit-backup-${todayISO()}.xlsx`;
   XLSX.writeFile(wb, filename);
 }

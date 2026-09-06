@@ -29,8 +29,17 @@ Each **deposit** is an independent, self-contained "note":
 - Has its own principal amount and deposit date.
 - Earns interest = `interest_rate` (currently always 2%, but stored
   per-deposit, see below) of its **current outstanding principal**, paid
-  out monthly, on the same day-of-month as the deposit date, starting the
-  month after the deposit was made.
+  out monthly, due the day AFTER the same day-of-month as the deposit date
+  (e.g. deposited 5 May -> due 6 June, 6 July, ...), starting the month
+  after the deposit was made. The +1 day exists because a full month must
+  *fully elapse* before interest is collectible — due 5 June would mean
+  only 30 days, not a complete month, have passed since 5 May. See
+  `src/lib/dates.ts` -> `nextMonthSameDay` (still returns the plain
+  same-day-of-month anniversary) and `src/lib/ledger.ts` ->
+  `computeMissingPayouts` (adds the 1-day offset only on the stored
+  `due_date`, while the internal loop keeps stepping the anniversary chain
+  itself — offsetting before stepping would compound the shift forward by
+  a day every cycle).
 - Keeps paying every month until fully withdrawn — a `status` flips from
   `active` to `closed` once its outstanding principal hits zero.
 - **Partial withdrawals are allowed.** A deposit can have many withdrawal
@@ -63,11 +72,15 @@ in isolation from the data layer.
 ### Day-of-month edge case (explicit default — confirm before changing)
 
 If a deposit date is the 29th/30th/31st and a shorter month comes around
-(e.g. deposited on the 31st, next month is February), the due date
-**clamps to the last day of that month** (e.g. Feb 28th), rather than
-rolling forward into March. This was an explicit design default, not
-requirement-driven — flag it to the owner before changing
-(`src/lib/dates.ts` -> `nextMonthSameDay`).
+(e.g. deposited on the 31st, next month is February), the underlying
+monthly **anniversary clamps to the last day of that month** (e.g. Feb
+28th) rather than rolling forward into March — this was an explicit
+design default, not requirement-driven — flag it to the owner before
+changing (`src/lib/dates.ts` -> `nextMonthSameDay`). The stored `due_date`
+is then one day after that clamped anniversary (see above), so a deposit
+on the 31st due into February shows a `due_date` of **1 March**, not Feb
+28th or Mar 1st-rolled-forward-from-31 — the clamp and the +1-day
+collectibility offset are independent, applied in that order.
 
 ### Break-even analytics (Analytics page)
 

@@ -1,5 +1,18 @@
+/**
+ * Formats a Date's LOCAL calendar date as 'YYYY-MM-DD'. Deliberately never
+ * uses toISOString() here — that converts to UTC, which silently shifts the
+ * date backward by a day for any timezone ahead of UTC (e.g. IST, SGT) once
+ * local midnight crosses into the previous UTC day.
+ */
+function toLocalISODate(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalISODate(new Date());
 }
 
 export function fmtDate(iso: string): string {
@@ -25,7 +38,18 @@ export function nextMonthSameDay(iso: string): string {
     0
   ).getDate();
   firstOfNextMonth.setDate(Math.min(day, lastDayOfNextMonth));
-  return firstOfNextMonth.toISOString().slice(0, 10);
+  return toLocalISODate(firstOfNextMonth);
+}
+
+/**
+ * Adds (or subtracts, for negative n) whole calendar days to an ISO date,
+ * correctly rolling over month/year boundaries. Local-date-safe like
+ * nextMonthSameDay — never touches toISOString()/UTC.
+ */
+export function addDays(iso: string, n: number): string {
+  const d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return toLocalISODate(d);
 }
 
 /** Formats a month count as "X yr Y mo" for the Analytics break-even estimate. */

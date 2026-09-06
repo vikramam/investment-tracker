@@ -1,5 +1,5 @@
 import type { DepositWithHistory, MemberWithDeposits, PendingPayoutRow } from '@/types';
-import { nextMonthSameDay, todayISO } from './dates';
+import { addDays, nextMonthSameDay, todayISO } from './dates';
 
 /** Current outstanding principal for a deposit (principal minus all withdrawals so far). */
 export function outstanding(deposit: DepositWithHistory): number {
@@ -88,6 +88,15 @@ export function breakEvenStats(deposits: DepositWithHistory[]): BreakEvenStats {
  * Each amount is snapshotted using the outstanding principal AS OF that
  * cycle's due date — never retroactively rewritten once created.
  *
+ * A cycle's "anniversary" is the same day-of-month as the deposit (clamped
+ * for short months by nextMonthSameDay); a full month has only genuinely
+ * elapsed once that whole day has passed, so the actual `due_date` stored
+ * is the anniversary PLUS one day. The anniversary chain itself (not the
+ * offset due_date) is what's stepped forward each iteration — offsetting
+ * first and then stepping from the offset value would shift every
+ * subsequent cycle another day later, compounding the same way the old
+ * UTC-conversion bug compounded a day earlier each cycle.
+ *
  * Pure function — no Supabase calls here, so it's trivially unit-testable.
  * The caller (useFamilyData) is responsible for actually inserting the
  * returned rows and refetching.
@@ -100,28 +109,31 @@ export function computeMissingPayouts(
 
   if (deposit.status === 'closed') return missing;
 
-  // Start from the latest existing payout's due date, or one month after
-  // the deposit date if no payout has ever been generated.
-  const lastDueDate =
+  // Recover the last generated cycle's anniversary from its stored due_date
+  // (due_date - 1 day), or start from the deposit date if none exist yet.
+  const lastAnniversary =
     deposit.payouts.length > 0
-      ? deposit.payouts.map((p) => p.due_date).sort().at(-1)!
-      : null;
+      ? addDays(deposit.payouts.map((p) => p.due_date).sort().at(-1)!, -1)
+      : deposit.deposit_date;
 
-  let nextDue = lastDueDate ? nextMonthSameDay(lastDueDate) : nextMonthSameDay(deposit.deposit_date);
+  let anniversary = nextMonthSameDay(lastAnniversary);
 
   // Guard against a runaway loop if data is somehow corrupted.
   let iterations = 0;
-  while (nextDue <= today && iterations < 240) {
-    const outAsOfDue = outstandingAsOf(deposit, nextDue);
+  while (iterations < 240) {
+    const dueDate = addDays(anniversary, 1);
+    if (dueDate > today) break;
+
+    const outAsOfDue = outstandingAsOf(deposit, dueDate);
     if (outAsOfDue <= 0) break; // deposit was fully withdrawn before this cycle — stop generating
 
     missing.push({
       deposit_id: deposit.id,
-      due_date: nextDue,
+      due_date: dueDate,
       amount: Math.round(outAsOfDue * deposit.interest_rate)
     });
 
-    nextDue = nextMonthSameDay(nextDue);
+    anniversary = nextMonthSameDay(anniversary);
     iterations += 1;
   }
 
