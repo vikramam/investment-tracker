@@ -1,4 +1,5 @@
-import { createTheme, type PaletteMode, type Theme } from '@mui/material/styles';
+import { createTheme, type Theme } from '@mui/material/styles';
+import type { PaletteMode } from '@mui/material';
 
 export const AMBER = '#C97A2B';
 export const AMBER_GRADIENT = 'linear-gradient(135deg,#E0A461 0%,#C97A2B 60%,#9C5D1E 100%)';
