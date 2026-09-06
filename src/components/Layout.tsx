@@ -26,7 +26,7 @@ export function Layout() {
           justifyContent: 'space-between',
           alignItems: 'center',
           px: 2.5,
-          pt: 'calc(16px + env(safe-area-inset-top))',
+          pt: 2,
           pb: 0.5,
           position: 'sticky',
           top: 0,
