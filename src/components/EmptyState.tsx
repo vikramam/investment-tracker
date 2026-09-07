@@ -1,6 +1,16 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
-export function EmptyState({ title, subtitle }: { title: string; subtitle: string }) {
+export function EmptyState({
+  title,
+  subtitle,
+  actionLabel,
+  onAction
+}: {
+  title: string;
+  subtitle: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <Box
       sx={{
@@ -19,6 +29,11 @@ export function EmptyState({ title, subtitle }: { title: string; subtitle: strin
       <Typography fontSize={12} color="text.secondary" mt={0.5}>
         {subtitle}
       </Typography>
+      {onAction && (
+        <Button variant="outlined" size="small" onClick={onAction} sx={{ mt: 1.5, fontSize: 11.5 }}>
+          {actionLabel ?? 'Try again'}
+        </Button>
+      )}
     </Box>
   );
 }

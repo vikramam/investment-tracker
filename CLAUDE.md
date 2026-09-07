@@ -268,12 +268,16 @@ Copied directly into `src/theme.ts`:
 
 ## What's NOT built yet (known gaps, in no particular priority)
 
-1. **Edit/delete** for family members, deposits, withdrawals, or payouts —
-   v1 only supports adding/logging forward, no correction flow yet. If a
-   mistake needs fixing, right now that means going into the Supabase
-   table editor directly, or (for interest specifically) re-running "Mark
-   Interest Collected Till Date" isn't a fix — it never un-collects
-   anything, it only ever moves pending -> collected.
+1. **Edit/delete** for deposits, withdrawals, or payouts — still no
+   correction flow for these. Family member **names** are the one
+   exception: "Edit names" in the hamburger menu (`src/components/
+   Layout.tsx`) opens a sheet listing every member with an editable field,
+   backed by `useFamilyData`'s `renameMembers` (batches only the rows that
+   actually changed into one update, then a single reload). Everything
+   else still means going into the Supabase table editor directly, or (for
+   interest specifically) re-running "Mark Interest Collected Till Date"
+   isn't a fix — it never un-collects anything, it only ever moves
+   pending -> collected.
 2. **Reminders/notifications** for upcoming due dates — explicitly
    declined for v1 (see "Payout generation" above).
 3. **PDF export** — not built (Excel export/backup is — see "What's

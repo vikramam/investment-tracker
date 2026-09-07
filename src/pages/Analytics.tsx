@@ -90,28 +90,28 @@ function AnalyticsCard({ name, stats, isAll }: { name: string; stats: BreakEvenS
     <Paper sx={{ p: 2, borderRadius: 1, mb: 1.5 }}>
       {header}
 
-      <Box sx={{ display: 'flex', gap: 2.25 }}>
-        <Box>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.75, rowGap: 1.5 }}>
+        <Box sx={{ minWidth: 100, flex: '1 1 auto' }}>
           <Typography fontSize={11} color="text.secondary">
             Invested
           </Typography>
-          <Typography sx={monoSx} fontSize={16} fontWeight={600} mt={0.25}>
+          <Typography sx={monoSx} fontSize={15} fontWeight={600} mt={0.25}>
             {fmtMoney(stats.invested)}
           </Typography>
         </Box>
-        <Box>
+        <Box sx={{ minWidth: 100, flex: '1 1 auto' }}>
           <Typography fontSize={11} color="text.secondary">
             Withdrawn
           </Typography>
-          <Typography sx={monoSx} fontSize={16} fontWeight={600} mt={0.25}>
+          <Typography sx={monoSx} fontSize={15} fontWeight={600} mt={0.25}>
             {fmtMoney(stats.withdrawn)}
           </Typography>
         </Box>
-        <Box>
+        <Box sx={{ minWidth: 100, flex: '1 1 auto' }}>
           <Typography fontSize={11} color="text.secondary">
             Interest collected
           </Typography>
-          <Typography sx={monoSx} fontSize={16} fontWeight={600} mt={0.25} color={GREEN}>
+          <Typography sx={monoSx} fontSize={15} fontWeight={600} mt={0.25} color={GREEN}>
             {fmtMoney(stats.interestPaid)}
           </Typography>
         </Box>

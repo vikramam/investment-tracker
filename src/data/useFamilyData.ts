@@ -26,10 +26,14 @@ type State = {
 export function useFamilyData() {
   const [state, setState] = useState<State>({ members: [], loading: true, error: null });
 
-  const load = useCallback(async () => {
-    setState((s) => ({ ...s, loading: true, error: null }));
-    try {
-      const [membersRes, depositsRes, withdrawalsRes, payoutsRes] = await Promise.all([
+  /**
+   * Does the actual fetch + assemble + lazy-generate + auto-close pass and
+   * commits it to state on success. Throws on any failure — load() below
+   * is what catches it, so this can be called more than once for a retry
+   * without duplicating the try/catch.
+   */
+  const loadOnce = useCallback(async () => {
+    const [membersRes, depositsRes, withdrawalsRes, payoutsRes] = await Promise.all([
         supabase.from('family_members').select('*').order('created_at'),
         supabase.from('deposits').select('*').order('deposit_date'),
         supabase.from('withdrawals').select('*'),
@@ -109,11 +113,36 @@ export function useFamilyData() {
         );
       }
 
-      setState({ members: assembled, loading: false, error: null });
-    } catch (err) {
-      setState({ members: [], loading: false, error: (err as Error).message });
-    }
+    setState({ members: assembled, loading: false, error: null });
   }, []);
+
+  /**
+   * A device's system clock can be briefly wrong right after waking from
+   * sleep (before it resyncs via NTP) — Supabase rejects the JWT as
+   * "issued in the future" when that happens, even though the session
+   * itself is fine. This is transient and normally clears up within a
+   * second or two, so retry once silently before surfacing an error the
+   * user has no way to act on from inside the app.
+   */
+  const load = useCallback(async () => {
+    setState((s) => ({ ...s, loading: true, error: null }));
+    try {
+      await loadOnce();
+    } catch (err) {
+      const message = (err as Error).message ?? '';
+      if (/jwt.*(future|issued)/i.test(message)) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        try {
+          await loadOnce();
+          return;
+        } catch (retryErr) {
+          setState({ members: [], loading: false, error: (retryErr as Error).message });
+          return;
+        }
+      }
+      setState({ members: [], loading: false, error: message });
+    }
+  }, [loadOnce]);
 
   useEffect(() => {
     load();
@@ -123,6 +152,20 @@ export function useFamilyData() {
     async (name: string) => {
       const { error } = await supabase.from('family_members').insert({ name });
       if (error) throw error;
+      await load();
+    },
+    [load]
+  );
+
+  /** Renames one or more family members in a single batch, then reloads once. */
+  const renameMembers = useCallback(
+    async (updates: { id: string; name: string }[]) => {
+      if (updates.length === 0) return;
+      const results = await Promise.all(
+        updates.map((u) => supabase.from('family_members').update({ name: u.name }).eq('id', u.id))
+      );
+      const failed = results.find((r) => r.error);
+      if (failed?.error) throw failed.error;
       await load();
     },
     [load]
@@ -171,5 +214,13 @@ export function useFamilyData() {
     [load]
   );
 
-  return { ...state, refresh: load, addMember, addDeposit, collectPayouts, withdrawPrincipal };
+  return {
+    ...state,
+    refresh: load,
+    addMember,
+    renameMembers,
+    addDeposit,
+    collectPayouts,
+    withdrawPrincipal
+  };
 }

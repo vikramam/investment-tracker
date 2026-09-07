@@ -88,7 +88,9 @@ export function MemberDetail() {
         </Typography>
       </Box>
 
-      <Paper sx={{ p: 2, borderRadius: 1, mb: 2, display: 'flex', justifyContent: 'space-between' }}>
+      <Paper
+        sx={{ p: 2, borderRadius: 1, mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1.75, rowGap: 1.5 }}
+      >
         <Stat label="Invested" value={fmtMoney(stats.invested)} />
         <Stat label="Interest paid" value={fmtMoney(stats.interestPaid)} />
         <Stat label="Withdrawn" value={fmtMoney(stats.withdrawn)} />
@@ -183,11 +185,11 @@ export function MemberDetail() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <Box>
+    <Box sx={{ minWidth: 100, flex: '1 1 auto' }}>
       <Typography fontSize={11} color="text.secondary">
         {label}
       </Typography>
-      <Typography sx={monoSx} fontSize={16} fontWeight={600} mt={0.25}>
+      <Typography sx={monoSx} fontSize={15} fontWeight={600} mt={0.25}>
         {value}
       </Typography>
     </Box>

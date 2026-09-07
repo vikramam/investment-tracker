@@ -13,8 +13,15 @@ import type { MemberWithDeposits } from '@/types';
 const CARD_WIDTH = 250;
 const CARD_GAP = 12;
 
+function greeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export function Dashboard() {
-  const { members, loading, error } = useFamilyData();
+  const { members, loading, error, refresh } = useFamilyData();
   const navigate = useNavigate();
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeSlide, setActiveSlide] = useState(0);
@@ -56,13 +63,13 @@ export function Dashboard() {
     );
   }
   if (error) {
-    return <EmptyState title="Couldn't load data" subtitle={error} />;
+    return <EmptyState title="Couldn't load data" subtitle={error} onAction={refresh} />;
   }
 
   return (
     <Box sx={{ animation: 'fadeUp 0.35s ease both' }}>
       <Typography variant="h3" fontSize={26} mb={0.25}>
-        Good morning
+        {greeting()}
       </Typography>
       <Typography fontSize={13} color="text.secondary" mb={2.5}>
         {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
