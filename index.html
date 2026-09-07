@@ -4,6 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <meta name="theme-color" content="#09090b" />
+    <script>
+      // Resolve and paint the correct theme-color BEFORE the JS bundle loads/
+      // mounts React — some mobile browsers snapshot the status-bar chrome
+      // color very early and never repaint it for a later DOM mutation, so
+      // the same effect in src/lib/themeMode.tsx can be too late on first
+      // paint. Keep this logic (storage key, hex values) in sync with that
+      // file's getInitialMode()/getModeTokens() if either ever changes.
+      (function () {
+        var stored = localStorage.getItem('family-deposit-theme-mode');
+        var isDark =
+          stored === 'dark' ||
+          (stored !== 'light' &&
+            window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', isDark ? '#09090b' : '#fafafa');
+      })();
+    </script>
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
