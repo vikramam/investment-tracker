@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import type { PaletteMode } from '@mui/material';
 import { getTheme } from '@/theme';
@@ -35,6 +35,16 @@ export function ThemeModeProvider({ children }: { children: ReactNode }) {
   );
 
   const theme = useMemo(() => getTheme(mode), [mode]);
+
+  // <meta name="theme-color"> is static in index.html and never reacts to
+  // this in-app toggle on its own — without this, the browser/PWA chrome
+  // above the header (status bar area) stays whatever color was baked
+  // into the HTML regardless of which mode is actually showing.
+  useEffect(() => {
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', theme.palette.background.default);
+  }, [theme]);
 
   return (
     <ThemeModeContext.Provider value={value}>

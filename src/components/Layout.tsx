@@ -111,7 +111,7 @@ export function Layout() {
         </Box>
       </Box>
 
-      <Box sx={{ flex: 1, px: 2.5, pb: 12, maxWidth: 520, width: '100%', mx: 'auto' }}>
+      <Box sx={{ flex: 1, px: 2.5, pt: 2, pb: 12, maxWidth: 520, width: '100%', mx: 'auto' }}>
         <Outlet />
       </Box>
 
