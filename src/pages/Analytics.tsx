@@ -6,11 +6,12 @@ import { fmtMoney } from '@/lib/money';
 import { fmtYearsMonths } from '@/lib/dates';
 import { AMBER, AMBER_GRADIENT, GREEN, monoSx } from '@/theme';
 import { Icon } from '@/icons/Icon';
+import { AnalyticsCardSkeleton } from '@/components/skeletons';
 
 type Tab = 'family' | 'byMember';
 
 export function Analytics() {
-  const { members } = useFamilyData();
+  const { members, loading } = useFamilyData();
   const [tab, setTab] = useState<Tab>('family');
 
   const familyStats = useMemo(
@@ -29,7 +30,9 @@ export function Analytics() {
         <TabChip label="By member" active={tab === 'byMember'} onClick={() => setTab('byMember')} />
       </Box>
 
-      {tab === 'family' ? (
+      {loading ? (
+        <AnalyticsCardSkeleton />
+      ) : tab === 'family' ? (
         <AnalyticsCard name="Whole family" stats={familyStats} isAll />
       ) : (
         members.map((m) => (

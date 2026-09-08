@@ -7,9 +7,10 @@ import { fmtMoney } from '@/lib/money';
 import { AMBER, AMBER_GRADIENT, monoSx } from '@/theme';
 import { Icon } from '@/icons/Icon';
 import { BottomSheet } from '@/components/BottomSheet';
+import { RowCardsSkeleton } from '@/components/skeletons';
 
 export function Family() {
-  const { members, addMember } = useFamilyData();
+  const { members, loading, addMember } = useFamilyData();
   const navigate = useNavigate();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [name, setName] = useState('');
@@ -41,7 +42,10 @@ export function Family() {
         </IconButton>
       </Box>
 
-      {members.map((m) => {
+      {loading ? (
+        <RowCardsSkeleton rows={3} />
+      ) : (
+        members.map((m) => {
         const stats = breakEvenStats(m.deposits);
         return (
           <Paper
@@ -97,7 +101,8 @@ export function Family() {
             </Box>
           </Paper>
         );
-      })}
+        })
+      )}
 
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Add family member">
         <TextField

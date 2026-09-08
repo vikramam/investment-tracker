@@ -1,11 +1,12 @@
 import { useMemo, useRef, useState } from 'react';
-import { Box, Paper, Typography, Button, CircularProgress } from '@mui/material';
+import { Box, Paper, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useFamilyData } from '@/data/useFamilyData';
 import { allPendingPayouts, breakEvenStats } from '@/lib/ledger';
 import { fmtMoney } from '@/lib/money';
 import { fmtDate } from '@/lib/dates';
 import { EmptyState } from '@/components/EmptyState';
+import { RowCardsSkeleton, SliderCardsSkeleton } from '@/components/skeletons';
 import { Icon } from '@/icons/Icon';
 import { AMBER, AMBER_GRADIENT, monoSx } from '@/theme';
 import type { MemberWithDeposits } from '@/types';
@@ -55,13 +56,6 @@ export function Dashboard() {
     setActiveSlide(idx);
   }
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', pt: 8 }}>
-        <CircularProgress size={28} />
-      </Box>
-    );
-  }
   if (error) {
     return <EmptyState title="Couldn't load data" subtitle={error} onAction={refresh} />;
   }
@@ -75,6 +69,15 @@ export function Dashboard() {
         {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
       </Typography>
 
+      {loading ? (
+        <>
+          <SliderCardsSkeleton />
+          <Box sx={{ mt: 2.5 }}>
+            <RowCardsSkeleton rows={2} />
+          </Box>
+        </>
+      ) : (
+        <>
       <Typography fontSize={13} fontWeight={600} mb={1.25}>
         Family overview &middot; swipe for each member
       </Typography>
@@ -88,7 +91,9 @@ export function Dashboard() {
           scrollSnapType: 'x mandatory',
           pb: 0.5,
           mx: -2.5,
-          px: 2.5
+          px: 2.5,
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' }
         }}
       >
         {slides.map((slide, i) => (
@@ -150,6 +155,8 @@ export function Dashboard() {
             </Typography>
           </Button>
         ))
+      )}
+        </>
       )}
     </Box>
   );

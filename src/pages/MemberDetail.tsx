@@ -5,6 +5,7 @@ import {
   Chip,
   IconButton,
   Paper,
+  Skeleton,
   TextField,
   Typography
 } from '@mui/material';
@@ -18,6 +19,7 @@ import { Icon } from '@/icons/Icon';
 import { EmptyState } from '@/components/EmptyState';
 import { BottomSheet } from '@/components/BottomSheet';
 import { CollectorPicker } from '@/components/CollectorPicker';
+import { StatRowSkeleton, RowCardsSkeleton } from '@/components/skeletons';
 import type { DepositWithHistory, MemberWithDeposits } from '@/types';
 
 type Tab = 'deposits' | 'interest' | 'withdrawals';
@@ -25,7 +27,7 @@ type Tab = 'deposits' | 'interest' | 'withdrawals';
 export function MemberDetail() {
   const { memberId } = useParams();
   const navigate = useNavigate();
-  const { members, addDeposit, withdrawPrincipal } = useFamilyData();
+  const { members, loading, addDeposit, withdrawPrincipal } = useFamilyData();
   const member = members.find((m) => m.id === memberId);
 
   const [tab, setTab] = useState<Tab>('deposits');
@@ -42,6 +44,21 @@ export function MemberDetail() {
     () => (member ? [...member.deposits].sort((a, b) => b.deposit_date.localeCompare(a.deposit_date)) : []),
     [member]
   );
+
+  if (loading) {
+    return (
+      <Box sx={{ animation: 'fadeUp 0.35s ease both' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 2 }}>
+          <IconButton onClick={() => navigate('/family')} size="small">
+            <Icon name="chevronLeft" />
+          </IconButton>
+          <Skeleton variant="text" width={120} height={24} />
+        </Box>
+        <StatRowSkeleton />
+        <RowCardsSkeleton rows={3} />
+      </Box>
+    );
+  }
 
   if (!member || !stats) {
     return <EmptyState title="Member not found" subtitle="They may have been removed" />;
@@ -106,7 +123,16 @@ export function MemberDetail() {
         Add deposit
       </Button>
 
-      <Box sx={{ display: 'flex', gap: 1, mb: 1.75, overflowX: 'auto' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 1,
+          mb: 1.75,
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' }
+        }}
+      >
         <TabChip label="Deposits" active={tab === 'deposits'} onClick={() => setTab('deposits')} />
         <TabChip
           label="Interest collected"

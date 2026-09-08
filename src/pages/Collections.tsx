@@ -8,6 +8,7 @@ import { monoSx } from '@/theme';
 import { EmptyState } from '@/components/EmptyState';
 import { BottomSheet } from '@/components/BottomSheet';
 import { CollectorPicker } from '@/components/CollectorPicker';
+import { RowCardsSkeleton } from '@/components/skeletons';
 import { Icon } from '@/icons/Icon';
 
 type Tab = 'ready' | 'upcoming' | 'withdrawals';
@@ -37,7 +38,7 @@ function groupByMember(rows: DueRow[]): MemberGroup[] {
 }
 
 export function Collections() {
-  const { members, collectPayouts } = useFamilyData();
+  const { members, loading, collectPayouts } = useFamilyData();
   const [tab, setTab] = useState<Tab>('ready');
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [collecting, setCollecting] = useState<CollectTarget | null>(null);
@@ -115,13 +116,24 @@ export function Collections() {
         Collections
       </Typography>
 
-      <Box sx={{ display: 'flex', gap: 1, mb: 2, overflowX: 'auto' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 1,
+          mb: 2,
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' }
+        }}
+      >
         <TabChip label="Ready to collect" active={tab === 'ready'} onClick={() => setTab('ready')} />
         <TabChip label="Upcoming" active={tab === 'upcoming'} onClick={() => setTab('upcoming')} />
         <TabChip label="Withdrawals" active={tab === 'withdrawals'} onClick={() => setTab('withdrawals')} />
       </Box>
 
-      {tab === 'ready' &&
+      {loading && <RowCardsSkeleton rows={3} />}
+
+      {!loading && tab === 'ready' &&
         (readyGroups.length === 0 ? (
           <EmptyState title="All caught up" subtitle="No interest payments waiting to be collected" />
         ) : (
@@ -189,7 +201,7 @@ export function Collections() {
           })
         ))}
 
-      {tab === 'upcoming' &&
+      {!loading && tab === 'upcoming' &&
         (upcomingGroups.length === 0 ? (
           <EmptyState title="Nothing upcoming" subtitle="Active deposits with a future cycle will show up here" />
         ) : (
@@ -242,7 +254,7 @@ export function Collections() {
           })
         ))}
 
-      {tab === 'withdrawals' &&
+      {!loading && tab === 'withdrawals' &&
         (withdrawalRows.length === 0 ? (
           <EmptyState title="No withdrawals yet" subtitle="Principal withdrawals will show up here" />
         ) : (
