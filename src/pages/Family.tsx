@@ -79,22 +79,22 @@ export function Family() {
                   justifyContent: 'center',
                   fontFamily: "'Space Grotesk', sans-serif",
                   fontWeight: 700,
-                  fontSize: 15
+                  fontSize: 16.5
                 }}
               >
                 {m.name.charAt(0)}
               </Box>
               <Box>
-                <Typography fontSize={14} fontWeight={600}>
+                <Typography fontSize={15.5} fontWeight={600}>
                   {m.name}
                 </Typography>
-                <Typography fontSize={11.5} color="text.secondary" mt={0.25}>
+                <Typography fontSize={12.5} color="text.secondary" mt={0.25}>
                   {m.deposits.length} deposit{m.deposits.length === 1 ? '' : 's'}
                 </Typography>
               </Box>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography sx={monoSx} fontSize={13.5} fontWeight={600}>
+              <Typography sx={monoSx} fontSize={15} fontWeight={600}>
                 {fmtMoney(stats.invested)}
               </Typography>
               <Icon name="chevronRight" fontSize="small" sx={{ color: 'text.secondary' }} />

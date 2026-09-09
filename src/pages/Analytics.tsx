@@ -59,12 +59,12 @@ function AnalyticsCard({ name, stats, isAll }: { name: string; stats: BreakEvenS
           color: isAll ? '#1B1710' : AMBER,
           fontFamily: "'Space Grotesk', sans-serif",
           fontWeight: 700,
-          fontSize: 12.5
+          fontSize: 13.5
         }}
       >
         {isAll ? <Icon name="family" fontSize="small" /> : name.charAt(0)}
       </Box>
-      <Typography fontSize={14} fontWeight={700}>
+      <Typography fontSize={15.5} fontWeight={700}>
         {name}
       </Typography>
     </Box>
@@ -74,7 +74,7 @@ function AnalyticsCard({ name, stats, isAll }: { name: string; stats: BreakEvenS
     return (
       <Paper sx={{ p: 2, borderRadius: 1, mb: 1.5 }}>
         {header}
-        <Typography fontSize={12} color="text.secondary">
+        <Typography fontSize={13} color="text.secondary">
           No deposits yet
         </Typography>
       </Paper>
@@ -95,7 +95,7 @@ function AnalyticsCard({ name, stats, isAll }: { name: string; stats: BreakEvenS
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.75, rowGap: 1.5 }}>
         <Box sx={{ minWidth: 100, flex: '1 1 auto' }}>
-          <Typography fontSize={11} color="text.secondary">
+          <Typography fontSize={12} color="text.secondary">
             Invested
           </Typography>
           <Typography sx={monoSx} fontSize={17} fontWeight={600} mt={0.25}>
@@ -103,7 +103,7 @@ function AnalyticsCard({ name, stats, isAll }: { name: string; stats: BreakEvenS
           </Typography>
         </Box>
         <Box sx={{ minWidth: 100, flex: '1 1 auto' }}>
-          <Typography fontSize={11} color="text.secondary">
+          <Typography fontSize={12} color="text.secondary">
             Withdrawn
           </Typography>
           <Typography sx={monoSx} fontSize={17} fontWeight={600} mt={0.25}>
@@ -111,7 +111,7 @@ function AnalyticsCard({ name, stats, isAll }: { name: string; stats: BreakEvenS
           </Typography>
         </Box>
         <Box sx={{ minWidth: 100, flex: '1 1 auto' }}>
-          <Typography fontSize={11} color="text.secondary">
+          <Typography fontSize={12} color="text.secondary">
             Interest collected
           </Typography>
           <Typography sx={monoSx} fontSize={17} fontWeight={600} mt={0.25} color={GREEN}>
@@ -123,7 +123,7 @@ function AnalyticsCard({ name, stats, isAll }: { name: string; stats: BreakEvenS
       <Box sx={{ height: 6, borderRadius: 0.75, bgcolor: 'divider', overflow: 'hidden', mt: 1.75, mb: 0.5 }}>
         <Box sx={{ height: '100%', width: `${pct}%`, bgcolor: barColor, borderRadius: 0.75 }} />
       </Box>
-      <Typography fontSize={10.5} color="text.secondary">
+      <Typography fontSize={11.5} color="text.secondary">
         {pct}% recovered (withdrawn + interest vs. invested)
       </Typography>
 
@@ -138,18 +138,18 @@ function AnalyticsCard({ name, stats, isAll }: { name: string; stats: BreakEvenS
           borderColor: 'divider'
         }}
       >
-        <Typography fontSize={11.5} color="text.secondary">
+        <Typography fontSize={12.5} color="text.secondary">
           Pending to break even
         </Typography>
-        <Typography sx={monoSx} fontSize={14} fontWeight={600} color={stats.achieved ? GREEN : 'text.primary'}>
+        <Typography sx={monoSx} fontSize={15.5} fontWeight={600} color={stats.achieved ? GREEN : 'text.primary'}>
           {stats.achieved ? 'Rs. 0.00' : fmtMoney(stats.pending)}
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-        <Typography fontSize={11.5} color="text.secondary">
+        <Typography fontSize={12.5} color="text.secondary">
           Est. time to break even
         </Typography>
-        <Typography fontSize={13} fontWeight={700} color={stats.achieved ? GREEN : 'text.primary'}>
+        <Typography fontSize={14.5} fontWeight={700} color={stats.achieved ? GREEN : 'text.primary'}>
           {timeLabel}
         </Typography>
       </Box>

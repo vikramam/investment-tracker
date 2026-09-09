@@ -171,9 +171,9 @@ export function Collections() {
                           borderColor: 'divider'
                         }}
                       >
-                        <Typography fontSize={12.5}>Due {fmtDate(p.due_date)}</Typography>
+                        <Typography fontSize={13.5}>Due {fmtDate(p.due_date)}</Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                          <Typography sx={monoSx} fontSize={13} fontWeight={600}>
+                          <Typography sx={monoSx} fontSize={14.5} fontWeight={600}>
                             {fmtMoney(p.amount)}
                           </Typography>
                           <Button
@@ -187,7 +187,7 @@ export function Collections() {
                             }
                             variant="contained"
                             size="small"
-                            sx={{ fontSize: 11.5, px: 1.5 }}
+                            sx={{ fontSize: 12.5, px: 1.5 }}
                           >
                             Collect
                           </Button>
@@ -232,16 +232,16 @@ export function Collections() {
                         }}
                       >
                         <Box>
-                          <Typography fontSize={12.5}>Next payout {fmtDate(p.due_date)}</Typography>
-                          <Typography fontSize={10.5} color="text.secondary" mt={0.25}>
+                          <Typography fontSize={13.5}>Next payout {fmtDate(p.due_date)}</Typography>
+                          <Typography fontSize={11.5} color="text.secondary" mt={0.25}>
                             Not due yet
                           </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                          <Typography sx={monoSx} fontSize={13} fontWeight={600}>
+                          <Typography sx={monoSx} fontSize={14.5} fontWeight={600}>
                             {fmtMoney(p.amount)}
                           </Typography>
-                          <Button disabled variant="outlined" size="small" sx={{ fontSize: 11.5, px: 1.5 }}>
+                          <Button disabled variant="outlined" size="small" sx={{ fontSize: 12.5, px: 1.5 }}>
                             Collect
                           </Button>
                         </Box>
@@ -264,14 +264,14 @@ export function Collections() {
               sx={{ p: 1.75, borderRadius: 1, mb: 1.25, display: 'flex', justifyContent: 'space-between' }}
             >
               <Box>
-                <Typography fontSize={13.5} fontWeight={600}>
+                <Typography fontSize={15} fontWeight={600}>
                   {w.memberName}
                 </Typography>
-                <Typography fontSize={11.5} color="text.secondary" mt={0.25}>
+                <Typography fontSize={12.5} color="text.secondary" mt={0.25}>
                   {fmtDate(w.withdrawal_date)} &middot; collected by {collectorName(w.collected_by)}
                 </Typography>
               </Box>
-              <Typography sx={monoSx} fontSize={13.5} fontWeight={600}>
+              <Typography sx={monoSx} fontSize={15} fontWeight={600}>
                 {fmtMoney(w.amount)}
               </Typography>
             </Paper>
@@ -293,10 +293,10 @@ export function Collections() {
                 mb: 1.75
               }}
             >
-              <Typography fontSize={13} color="text.secondary">
+              <Typography fontSize={14} color="text.secondary">
                 {collecting.memberName} &middot; {collecting.label}
               </Typography>
-              <Typography sx={monoSx} fontSize={15} fontWeight={600}>
+              <Typography sx={monoSx} fontSize={17} fontWeight={600}>
                 {fmtMoney(collecting.amount)}
               </Typography>
             </Box>
@@ -347,12 +347,12 @@ function GroupHeader({
             transition: 'transform 0.15s'
           }}
         />
-        <Typography fontSize={13.5} fontWeight={700}>
+        <Typography fontSize={15} fontWeight={700}>
           {name}
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Typography sx={monoSx} fontSize={12.5} fontWeight={600} color="text.secondary">
+        <Typography sx={monoSx} fontSize={13.5} fontWeight={600} color="text.secondary">
           Total {fmtMoney(total)}
         </Typography>
         {onCollectAll && (
@@ -363,7 +363,7 @@ function GroupHeader({
             }}
             variant="outlined"
             size="small"
-            sx={{ fontSize: 11, px: 1.25 }}
+            sx={{ fontSize: 12, px: 1.25 }}
           >
             Collect all
           </Button>
