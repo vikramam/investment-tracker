@@ -100,7 +100,7 @@ export function MemberDetail() {
         <IconButton onClick={() => navigate('/family')} size="small">
           <Icon name="chevronLeft" />
         </IconButton>
-        <Typography variant="h5" fontSize={18}>
+        <Typography variant="h5" fontSize={22}>
           {member.name}
         </Typography>
       </Box>
@@ -215,7 +215,7 @@ function Stat({ label, value }: { label: string; value: string }) {
       <Typography fontSize={11} color="text.secondary">
         {label}
       </Typography>
-      <Typography sx={monoSx} fontSize={15} fontWeight={600} mt={0.25}>
+      <Typography sx={monoSx} fontSize={17} fontWeight={600} mt={0.25}>
         {value}
       </Typography>
     </Box>
@@ -248,7 +248,7 @@ function DepositCard({ deposit, onWithdraw }: { deposit: DepositWithHistory; onW
     <Paper sx={{ p: 2, borderRadius: 1, mb: 1.25 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <Box>
-          <Typography sx={monoSx} fontSize={16} fontWeight={600}>
+          <Typography sx={monoSx} fontSize={19} fontWeight={600}>
             {fmtMoney(out)}
           </Typography>
           <Typography fontSize={11.5} color="text.secondary" mt={0.375}>

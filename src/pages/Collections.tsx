@@ -112,7 +112,7 @@ export function Collections() {
 
   return (
     <Box sx={{ animation: 'fadeUp 0.35s ease both' }}>
-      <Typography variant="h4" fontSize={20} mb={2}>
+      <Typography variant="h4" fontSize={28} mb={2}>
         Collections
       </Typography>
 

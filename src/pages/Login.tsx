@@ -31,7 +31,7 @@ export function Login({ onSignedIn }: { onSignedIn: () => void }) {
       }}
     >
       <Paper sx={{ p: 3, borderRadius: 1, width: '100%', maxWidth: 360 }}>
-        <Typography variant="h4" fontSize={22} mb={0.5}>
+        <Typography variant="h4" fontSize={26} mb={0.5}>
           Family Deposit Tracker
         </Typography>
         <Typography fontSize={13} color="text.secondary" mb={2.5}>

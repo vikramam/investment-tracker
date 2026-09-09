@@ -62,7 +62,7 @@ export function Dashboard() {
 
   return (
     <Box sx={{ animation: 'fadeUp 0.35s ease both' }}>
-      <Typography variant="h3" fontSize={26} mb={0.25}>
+      <Typography variant="h3" fontSize={30} mb={0.25}>
         {greeting()}
       </Typography>
       <Typography fontSize={13} color="text.secondary" mb={2.5}>
@@ -147,10 +147,10 @@ export function Dashboard() {
               color: 'text.primary'
             }}
           >
-            <Typography fontSize={13} fontWeight={600}>
+            <Typography fontSize={14} fontWeight={600}>
               {g.name}
             </Typography>
-            <Typography sx={monoSx} fontSize={14} fontWeight={600}>
+            <Typography sx={monoSx} fontSize={15} fontWeight={600}>
               {fmtMoney(g.total)}
             </Typography>
           </Button>
@@ -228,7 +228,7 @@ function SlideCard({
       <Typography fontSize={11} color="text.secondary">
         Invested
       </Typography>
-      <Typography sx={monoSx} fontSize={19} fontWeight={600} mb={1}>
+      <Typography sx={monoSx} fontSize={22} fontWeight={600} mb={1}>
         {fmtMoney(stats.invested)}
       </Typography>
 

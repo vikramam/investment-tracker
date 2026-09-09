@@ -21,7 +21,7 @@ export function Analytics() {
 
   return (
     <Box sx={{ animation: 'fadeUp 0.35s ease both' }}>
-      <Typography variant="h4" fontSize={20} mb={2}>
+      <Typography variant="h4" fontSize={28} mb={2}>
         Analytics
       </Typography>
 
@@ -98,7 +98,7 @@ function AnalyticsCard({ name, stats, isAll }: { name: string; stats: BreakEvenS
           <Typography fontSize={11} color="text.secondary">
             Invested
           </Typography>
-          <Typography sx={monoSx} fontSize={15} fontWeight={600} mt={0.25}>
+          <Typography sx={monoSx} fontSize={17} fontWeight={600} mt={0.25}>
             {fmtMoney(stats.invested)}
           </Typography>
         </Box>
@@ -106,7 +106,7 @@ function AnalyticsCard({ name, stats, isAll }: { name: string; stats: BreakEvenS
           <Typography fontSize={11} color="text.secondary">
             Withdrawn
           </Typography>
-          <Typography sx={monoSx} fontSize={15} fontWeight={600} mt={0.25}>
+          <Typography sx={monoSx} fontSize={17} fontWeight={600} mt={0.25}>
             {fmtMoney(stats.withdrawn)}
           </Typography>
         </Box>
@@ -114,7 +114,7 @@ function AnalyticsCard({ name, stats, isAll }: { name: string; stats: BreakEvenS
           <Typography fontSize={11} color="text.secondary">
             Interest collected
           </Typography>
-          <Typography sx={monoSx} fontSize={15} fontWeight={600} mt={0.25} color={GREEN}>
+          <Typography sx={monoSx} fontSize={17} fontWeight={600} mt={0.25} color={GREEN}>
             {fmtMoney(stats.interestPaid)}
           </Typography>
         </Box>

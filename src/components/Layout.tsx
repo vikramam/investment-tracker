@@ -82,7 +82,7 @@ export function Layout() {
           bgcolor: mode === 'dark' ? 'rgba(9,9,11,0.7)' : 'rgba(250,250,250,0.7)'
         }}
       >
-        <Typography variant="h6" fontSize={16} fontWeight={700}>
+        <Typography variant="h6" fontSize={18} fontWeight={700}>
           Investment Tracker
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
