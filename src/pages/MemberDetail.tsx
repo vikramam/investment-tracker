@@ -51,7 +51,7 @@ export function MemberDetail() {
 
   if (loading) {
     return (
-      <Box sx={{ animation: 'fadeUp 0.35s ease both' }}>
+      <Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 2 }}>
           <IconButton onClick={() => navigate('/family')} size="small">
             <Icon name="chevronLeft" />
@@ -115,7 +115,7 @@ export function MemberDetail() {
   }
 
   return (
-    <Box sx={{ animation: 'fadeUp 0.35s ease both' }}>
+    <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 2 }}>
         <IconButton onClick={() => navigate('/family')} size="small">
           <Icon name="chevronLeft" />

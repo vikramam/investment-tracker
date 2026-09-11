@@ -15,6 +15,7 @@ import {
   useTheme
 } from '@mui/material';
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Icon } from '@/icons/Icon';
 import { useThemeMode } from '@/lib/themeMode';
 import { supabase } from '@/lib/supabase';
@@ -34,6 +35,7 @@ export function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { members, renameMembers } = useFamilyData();
+  const prefersReducedMotion = useReducedMotion();
   const [menuOpen, setMenuOpen] = useState(false);
   const [editNamesOpen, setEditNamesOpen] = useState(false);
   const [names, setNames] = useState<Record<string, string>>({});
@@ -111,8 +113,30 @@ export function Layout() {
         </Box>
       </Box>
 
-      <Box sx={{ flex: 1, px: 2.5, pt: 2, pb: 12, maxWidth: 520, width: '100%', mx: 'auto' }}>
-        <Outlet />
+      <Box
+        sx={{
+          flex: 1,
+          px: 2.5,
+          pt: 2,
+          pb: 12,
+          maxWidth: 520,
+          width: '100%',
+          mx: 'auto',
+          position: 'relative',
+          overflowX: 'hidden'
+        }}
+      >
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, x: prefersReducedMotion ? 0 : 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: prefersReducedMotion ? 0 : -16 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.22, ease: [0.4, 0, 0.2, 1] }}
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </Box>
 
       <BottomNavigation

@@ -29,7 +29,7 @@ export function Family() {
   }
 
   return (
-    <Box sx={{ animation: 'fadeUp 0.35s ease both' }}>
+    <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
         <Typography variant="h4" fontSize={28}>
           Family

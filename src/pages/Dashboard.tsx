@@ -87,7 +87,7 @@ export function Dashboard() {
   }
 
   return (
-    <Box sx={{ animation: 'fadeUp 0.35s ease both' }}>
+    <Box>
       <Typography variant="h3" fontSize={30} mb={0.25}>
         {greeting()}
       </Typography>

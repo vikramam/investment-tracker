@@ -20,7 +20,7 @@ export function Analytics() {
   );
 
   return (
-    <Box sx={{ animation: 'fadeUp 0.35s ease both' }}>
+    <Box>
       <Typography variant="h4" fontSize={28} mb={2}>
         Analytics
       </Typography>
