@@ -213,7 +213,7 @@ Copied directly into `src/theme.ts`:
   + mutation hook everything else uses. Fetches all four tables, assembles
   the nested `MemberWithDeposits[]` shape, lazily generates due payouts,
   auto-closes fully-withdrawn deposits, and exposes `addMember`,
-  `addDeposit`, `collectPayout`, `withdrawPrincipal`.
+  `addDeposit`, `collectPayout`, `withdrawPrincipal`, `deleteDeposit`.
 - **Dashboard** — greeting header, swipeable "Family overview" slider (an
   "All family" card + one card per member, dot indicators), upcoming
   payouts list.
@@ -221,8 +221,10 @@ Copied directly into `src/theme.ts`:
   invested), "+ Add member" sheet.
 - **Member detail** — summary stat row, "Add deposit" button/sheet, three
   tabs: **Deposits** (cards with outstanding amount, status, next due,
-  "Withdraw principal" button/sheet), **Interest collected** (history),
-  **Principal withdrawn** (history).
+  "Withdraw principal" button/sheet, and a trash icon opening a "type
+  delete to confirm" sheet that permanently deletes the deposit plus its
+  withdrawals/payouts — see "What's NOT built yet" #1), **Interest
+  collected** (history), **Principal withdrawn** (history).
 - **Collections** — "Interest due" tab: payouts **grouped by family
   member**, each showing every deposit's due amount plus a member total,
   with **Collect only enabled once `due_date <= today`** (otherwise shown
@@ -268,16 +270,22 @@ Copied directly into `src/theme.ts`:
 
 ## What's NOT built yet (known gaps, in no particular priority)
 
-1. **Edit/delete** for deposits, withdrawals, or payouts — still no
-   correction flow for these. Family member **names** are the one
-   exception: "Edit names" in the hamburger menu (`src/components/
-   Layout.tsx`) opens a sheet listing every member with an editable field,
-   backed by `useFamilyData`'s `renameMembers` (batches only the rows that
-   actually changed into one update, then a single reload). Everything
-   else still means going into the Supabase table editor directly, or (for
-   interest specifically) re-running "Mark Interest Collected Till Date"
-   isn't a fix — it never un-collects anything, it only ever moves
-   pending -> collected.
+1. **Edit/delete** for withdrawals or payouts individually — still no
+   correction flow for these. Family member **names** are one exception:
+   "Edit names" in the hamburger menu (`src/components/Layout.tsx`) opens
+   a sheet listing every member with an editable field, backed by
+   `useFamilyData`'s `renameMembers` (batches only the rows that actually
+   changed into one update, then a single reload). **Deleting a whole
+   deposit** is the other exception: each deposit card on Member detail ->
+   Deposits has a trash icon that opens a "type delete to confirm" sheet,
+   backed by `useFamilyData`'s `deleteDeposit` — it deletes the deposit's
+   `interest_payouts` and `withdrawals` rows first (no `ON DELETE CASCADE`
+   in `schema.sql`), then the `deposits` row itself, then reloads. This is
+   a hard delete with no undo, unlike "Mark Interest Collected Till Date"
+   which only ever moves pending -> collected and never un-collects
+   anything. There's still no way to edit/delete a *single* withdrawal or
+   payout row without deleting the whole parent deposit — that still means
+   going into the Supabase table editor directly.
 2. **Reminders/notifications** for upcoming due dates — explicitly
    declined for v1 (see "Payout generation" above).
 3. **PDF export** — not built (Excel export/backup is — see "What's

@@ -78,6 +78,14 @@ const SHAPES: Record<string, ReactNode> = {
       <path d="M16 17l5-5-5-5" />
       <path d="M21 12H9" />
     </>
+  ),
+  trash: (
+    <>
+      <path d="M4 7h16" />
+      <path d="M9 7V4h6v3" />
+      <path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13" />
+      <path d="M10 11v6M14 11v6" />
+    </>
   )
 };
 

@@ -52,6 +52,12 @@ export function addDays(iso: string, n: number): string {
   return toLocalISODate(d);
 }
 
+/** Last day of the current local calendar month, as an ISO date string. */
+export function endOfMonthISO(): string {
+  const now = new Date();
+  return toLocalISODate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+}
+
 /** Formats a month count as "X yr Y mo" for the Analytics break-even estimate. */
 export function fmtYearsMonths(months: number | null): string | null {
   if (months === null || months === undefined) return null;

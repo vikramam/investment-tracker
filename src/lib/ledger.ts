@@ -36,6 +36,29 @@ export function allPendingPayouts(members: MemberWithDeposits[]): PendingPayoutR
   return rows;
 }
 
+/** Every deposit's next not-yet-due payout preview across every member,
+ * sorted soonest-due first. Shared by Collections' "Upcoming" tab and the
+ * Dashboard's next-collection summary so both agree on what's upcoming. */
+export function allUpcomingPreviews(
+  members: MemberWithDeposits[]
+): { depositId: string; memberId: string; memberName: string; due_date: string; amount: number }[] {
+  const rows: {
+    depositId: string;
+    memberId: string;
+    memberName: string;
+    due_date: string;
+    amount: number;
+  }[] = [];
+  members.forEach((m) => {
+    m.deposits.forEach((d) => {
+      const preview = previewNextPayout(d);
+      if (preview) rows.push({ depositId: d.id, memberId: m.id, memberName: m.name, ...preview });
+    });
+  });
+  rows.sort((a, b) => a.due_date.localeCompare(b.due_date));
+  return rows;
+}
+
 export type BreakEvenStats = {
   invested: number;
   withdrawn: number;

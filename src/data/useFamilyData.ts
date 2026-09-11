@@ -214,6 +214,34 @@ export function useFamilyData() {
     [load]
   );
 
+  /**
+   * Permanently deletes a deposit ("FD") and every ledger row that hangs
+   * off it — its interest payouts (collected and pending) and withdrawals.
+   * There's no `ON DELETE CASCADE` in schema.sql, so the child tables are
+   * cleared first to avoid an FK violation on the parent delete.
+   */
+  const deleteDeposit = useCallback(
+    async (depositId: string) => {
+      const { error: payoutsError } = await supabase
+        .from('interest_payouts')
+        .delete()
+        .eq('deposit_id', depositId);
+      if (payoutsError) throw payoutsError;
+
+      const { error: withdrawalsError } = await supabase
+        .from('withdrawals')
+        .delete()
+        .eq('deposit_id', depositId);
+      if (withdrawalsError) throw withdrawalsError;
+
+      const { error: depositError } = await supabase.from('deposits').delete().eq('id', depositId);
+      if (depositError) throw depositError;
+
+      await load();
+    },
+    [load]
+  );
+
   return {
     ...state,
     refresh: load,
@@ -221,6 +249,7 @@ export function useFamilyData() {
     renameMembers,
     addDeposit,
     collectPayouts,
-    withdrawPrincipal
+    withdrawPrincipal,
+    deleteDeposit
   };
 }

@@ -27,7 +27,7 @@ type Tab = 'deposits' | 'interest' | 'withdrawals';
 export function MemberDetail() {
   const { memberId } = useParams();
   const navigate = useNavigate();
-  const { members, loading, addDeposit, withdrawPrincipal } = useFamilyData();
+  const { members, loading, addDeposit, withdrawPrincipal, deleteDeposit } = useFamilyData();
   const member = members.find((m) => m.id === memberId);
 
   const [tab, setTab] = useState<Tab>('deposits');
@@ -38,6 +38,10 @@ export function MemberDetail() {
 
   const [withdrawDeposit, setWithdrawDeposit] = useState<DepositWithHistory | null>(null);
   const [withdrawCollector, setWithdrawCollector] = useState<string | null>(null);
+
+  const [deleteTarget, setDeleteTarget] = useState<DepositWithHistory | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   const stats = useMemo(() => (member ? breakEvenStats(member.deposits) : null), [member]);
   const sortedDeposits = useMemo(
@@ -91,6 +95,22 @@ export function MemberDetail() {
       setWithdrawDeposit(null);
     } finally {
       setSaving(false);
+    }
+  }
+
+  function closeDeleteSheet() {
+    setDeleteTarget(null);
+    setDeleteConfirmText('');
+  }
+
+  async function submitDeleteDeposit() {
+    if (!deleteTarget || deleteConfirmText.trim().toLowerCase() !== 'delete') return;
+    setDeleting(true);
+    try {
+      await deleteDeposit(deleteTarget.id);
+      closeDeleteSheet();
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -151,7 +171,12 @@ export function MemberDetail() {
           <EmptyState title="No deposits yet" subtitle="Add their first deposit above" />
         ) : (
           sortedDeposits.map((d) => (
-            <DepositCard key={d.id} deposit={d} onWithdraw={() => setWithdrawDeposit(d)} />
+            <DepositCard
+              key={d.id}
+              deposit={d}
+              onWithdraw={() => setWithdrawDeposit(d)}
+              onDelete={() => setDeleteTarget(d)}
+            />
           ))
         ))}
 
@@ -205,6 +230,35 @@ export function MemberDetail() {
           </>
         )}
       </BottomSheet>
+
+      <BottomSheet open={!!deleteTarget} onClose={closeDeleteSheet} title="Delete deposit">
+        {deleteTarget && (
+          <>
+            <Typography fontSize={12.5} color="text.secondary" mb={1.5}>
+              This permanently deletes this deposit of {fmtMoney(deleteTarget.principal_amount)} (deposited{' '}
+              {fmtDate(deleteTarget.deposit_date)}) along with every withdrawal and interest payout —
+              collected or pending — recorded against it. This cannot be undone.
+            </Typography>
+            <TextField
+              fullWidth
+              label='Type "delete" to confirm'
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              sx={{ mb: 2 }}
+              autoFocus
+            />
+            <Button
+              fullWidth
+              variant="contained"
+              color="error"
+              onClick={submitDeleteDeposit}
+              disabled={deleting || deleteConfirmText.trim().toLowerCase() !== 'delete'}
+            >
+              {deleting ? 'Deleting…' : 'Delete deposit'}
+            </Button>
+          </>
+        )}
+      </BottomSheet>
     </Box>
   );
 }
@@ -238,7 +292,15 @@ function TabChip({ label, active, onClick }: { label: string; active: boolean; o
   );
 }
 
-function DepositCard({ deposit, onWithdraw }: { deposit: DepositWithHistory; onWithdraw: () => void }) {
+function DepositCard({
+  deposit,
+  onWithdraw,
+  onDelete
+}: {
+  deposit: DepositWithHistory;
+  onWithdraw: () => void;
+  onDelete: () => void;
+}) {
   const out = outstanding(deposit);
   const isActive = out > 0;
   const nextDue = deposit.payouts.find((p) => p.status === 'pending');
@@ -255,16 +317,21 @@ function DepositCard({ deposit, onWithdraw }: { deposit: DepositWithHistory; onW
             Deposited {fmtDate(deposit.deposit_date)}
           </Typography>
         </Box>
-        <Chip
-          label={isActive ? 'Active' : 'Closed'}
-          size="small"
-          sx={{
-            bgcolor: isActive ? 'rgba(95,177,88,0.12)' : 'transparent',
-            color: isActive ? GREEN : 'text.secondary',
-            fontWeight: 700,
-            fontSize: 10.5
-          }}
-        />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Chip
+            label={isActive ? 'Active' : 'Closed'}
+            size="small"
+            sx={{
+              bgcolor: isActive ? 'rgba(95,177,88,0.12)' : 'transparent',
+              color: isActive ? GREEN : 'text.secondary',
+              fontWeight: 700,
+              fontSize: 10.5
+            }}
+          />
+          <IconButton onClick={onDelete} size="small" sx={{ color: 'error.main' }} aria-label="Delete deposit">
+            <Icon name="trash" fontSize="small" />
+          </IconButton>
+        </Box>
       </Box>
 
       {(nextDue || preview) && (

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Box, Button, Chip, Paper, Typography } from '@mui/material';
 import { useFamilyData } from '@/data/useFamilyData';
-import { allPendingPayouts, previewNextPayout } from '@/lib/ledger';
+import { allPendingPayouts, allUpcomingPreviews } from '@/lib/ledger';
 import { fmtMoney } from '@/lib/money';
 import { fmtDate, todayISO } from '@/lib/dates';
 import { monoSx } from '@/theme';
@@ -39,7 +40,9 @@ function groupByMember(rows: DueRow[]): MemberGroup[] {
 
 export function Collections() {
   const { members, loading, collectPayouts } = useFamilyData();
-  const [tab, setTab] = useState<Tab>('ready');
+  const location = useLocation();
+  const initialTab = (location.state as { tab?: Tab } | null)?.tab ?? 'ready';
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [collecting, setCollecting] = useState<CollectTarget | null>(null);
   const [collector, setCollector] = useState<string | null>(null);
@@ -58,22 +61,13 @@ export function Collections() {
   }, [members]);
 
   const upcomingGroups = useMemo(() => {
-    const rows: DueRow[] = [];
-    members.forEach((m) => {
-      m.deposits.forEach((d) => {
-        const preview = previewNextPayout(d);
-        if (preview) {
-          rows.push({
-            id: `preview-${d.id}`,
-            memberId: m.id,
-            memberName: m.name,
-            due_date: preview.due_date,
-            amount: preview.amount
-          });
-        }
-      });
-    });
-    rows.sort((a, b) => a.due_date.localeCompare(b.due_date));
+    const rows: DueRow[] = allUpcomingPreviews(members).map((p) => ({
+      id: `preview-${p.depositId}`,
+      memberId: p.memberId,
+      memberName: p.memberName,
+      due_date: p.due_date,
+      amount: p.amount
+    }));
     return groupByMember(rows);
   }, [members]);
 

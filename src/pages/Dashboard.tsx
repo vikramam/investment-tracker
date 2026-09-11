@@ -2,9 +2,9 @@ import { useMemo, useRef, useState } from 'react';
 import { Box, Paper, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useFamilyData } from '@/data/useFamilyData';
-import { allPendingPayouts, breakEvenStats } from '@/lib/ledger';
+import { allPendingPayouts, allUpcomingPreviews, breakEvenStats } from '@/lib/ledger';
 import { fmtMoney } from '@/lib/money';
-import { fmtDate } from '@/lib/dates';
+import { endOfMonthISO, fmtDate } from '@/lib/dates';
 import { EmptyState } from '@/components/EmptyState';
 import { RowCardsSkeleton, SliderCardsSkeleton } from '@/components/skeletons';
 import { Icon } from '@/icons/Icon';
@@ -13,6 +13,19 @@ import type { MemberWithDeposits } from '@/types';
 
 const CARD_WIDTH = 250;
 const CARD_GAP = 12;
+
+type UpcomingSummary = {
+  total: number;
+  lastDate: string;
+  monthEnd: string;
+  monthEndTotal: number;
+  showMonthSplit: boolean;
+};
+
+type Slide =
+  | { type: 'all'; name: string; stats: ReturnType<typeof breakEvenStats> }
+  | { type: 'milestone'; summary: UpcomingSummary }
+  | { type: 'member'; name: string; member: MemberWithDeposits; stats: ReturnType<typeof breakEvenStats> };
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -36,18 +49,31 @@ export function Dashboard() {
     return [...map.values()];
   }, [members]);
 
-  const slides = useMemo(() => {
-    const allDeposits = members.flatMap((m) => m.deposits);
-    return [
-      { name: 'All family', member: null, stats: breakEvenStats(allDeposits), isAll: true },
-      ...members.map((m) => ({
-        name: m.name,
-        member: m,
-        stats: breakEvenStats(m.deposits),
-        isAll: false
-      }))
-    ];
+  /**
+   * "Visit by <date> to collect everything upcoming" — the furthest due
+   * date among every deposit's next payout preview, plus the total across
+   * all of them (since visiting on that last date means every earlier
+   * preview has become due by then too), and a this-month-only subtotal
+   * so the family can see what's collectible sooner without waiting for
+   * the furthest deposit's cycle.
+   */
+  const upcomingSummary = useMemo<UpcomingSummary | null>(() => {
+    const rows = allUpcomingPreviews(members);
+    if (rows.length === 0) return null;
+    const total = rows.reduce((s, r) => s + r.amount, 0);
+    const lastDate = rows[rows.length - 1].due_date;
+    const monthEnd = endOfMonthISO();
+    const monthEndTotal = rows.filter((r) => r.due_date <= monthEnd).reduce((s, r) => s + r.amount, 0);
+    return { total, lastDate, monthEnd, monthEndTotal, showMonthSplit: monthEndTotal > 0 && monthEndTotal < total };
   }, [members]);
+
+  const slides = useMemo<Slide[]>(() => {
+    const allDeposits = members.flatMap((m) => m.deposits);
+    const result: Slide[] = [{ type: 'all', name: 'All family', stats: breakEvenStats(allDeposits) }];
+    if (upcomingSummary) result.push({ type: 'milestone', summary: upcomingSummary });
+    members.forEach((m) => result.push({ type: 'member', name: m.name, member: m, stats: breakEvenStats(m.deposits) }));
+    return result;
+  }, [members, upcomingSummary]);
 
   function onSliderScroll() {
     const el = trackRef.current;
@@ -96,17 +122,26 @@ export function Dashboard() {
           '&::-webkit-scrollbar': { display: 'none' }
         }}
       >
-        {slides.map((slide, i) => (
-          <SlideCard
-            key={i}
-            name={slide.name}
-            member={slide.member}
-            stats={slide.stats}
-            isAll={slide.isAll}
-            fullWidth={slides.length <= 1}
-            onView={() => slide.member && navigate(`/family/${slide.member.id}`)}
-          />
-        ))}
+        {slides.map((slide, i) =>
+          slide.type === 'milestone' ? (
+            <MilestoneSlideCard
+              key={i}
+              summary={slide.summary}
+              fullWidth={slides.length <= 1}
+              onView={() => navigate('/collections', { state: { tab: 'upcoming' } })}
+            />
+          ) : (
+            <SlideCard
+              key={i}
+              name={slide.name}
+              member={slide.type === 'member' ? slide.member : null}
+              stats={slide.stats}
+              isAll={slide.type === 'all'}
+              fullWidth={slides.length <= 1}
+              onView={() => slide.type === 'member' && navigate(`/family/${slide.member.id}`)}
+            />
+          )
+        )}
       </Box>
       <Box sx={{ display: 'flex', gap: 0.75, justifyContent: 'center', mt: 1.25, mb: 2.5 }}>
         {slides.map((_, i) => (
@@ -159,6 +194,94 @@ export function Dashboard() {
         </>
       )}
     </Box>
+  );
+}
+
+function MilestoneSlideCard({
+  summary,
+  fullWidth,
+  onView
+}: {
+  summary: UpcomingSummary;
+  fullWidth: boolean;
+  onView: () => void;
+}) {
+  return (
+    <Paper
+      sx={{
+        width: fullWidth ? '100%' : CARD_WIDTH,
+        minWidth: CARD_WIDTH,
+        scrollSnapAlign: 'start',
+        flexShrink: 0,
+        p: 2,
+        borderRadius: 1,
+        backgroundImage: 'linear-gradient(160deg, rgba(201,122,43,0.14), rgba(201,122,43,0.02))',
+        borderColor: 'rgba(201,122,43,0.35)'
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+        <Box
+          sx={{
+            width: 28,
+            height: 28,
+            borderRadius: '9px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundImage: AMBER_GRADIENT,
+            color: '#1B1710'
+          }}
+        >
+          <Icon name="calendar" fontSize="small" />
+        </Box>
+        <Typography fontSize={13.5} fontWeight={600}>
+          Next collection
+        </Typography>
+      </Box>
+
+      <Typography fontSize={11} color="text.secondary">
+        Visit by
+      </Typography>
+      <Typography sx={monoSx} fontSize={20} fontWeight={600} mb={1}>
+        {fmtDate(summary.lastDate)}
+      </Typography>
+
+      <Box sx={{ display: 'flex', gap: 1.75 }}>
+        <Box>
+          <Typography fontSize={10.5} color="text.secondary">
+            Total collectible
+          </Typography>
+          <Typography sx={monoSx} fontSize={12.5}>
+            {fmtMoney(summary.total)}
+          </Typography>
+        </Box>
+        {summary.showMonthSplit && (
+          <Box>
+            <Typography fontSize={10.5} color="text.secondary">
+              By month end
+            </Typography>
+            <Typography sx={monoSx} fontSize={12.5}>
+              {fmtMoney(summary.monthEndTotal)}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      <Button
+        fullWidth
+        onClick={onView}
+        sx={{
+          mt: 1.5,
+          border: '1px solid',
+          borderColor: 'divider',
+          color: 'text.primary',
+          fontSize: 11.5,
+          py: 0.75
+        }}
+      >
+        View upcoming
+      </Button>
+    </Paper>
   );
 }
 
